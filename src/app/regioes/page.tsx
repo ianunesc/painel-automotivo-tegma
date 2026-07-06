@@ -49,11 +49,11 @@ export default async function RegioesPage({
     const map = byMonthRegion.get(m);
     return {
       mes: mesLabel(m),
-      Norte: map?.get('Norte') ?? 0,
-      Nordeste: map?.get('Nordeste') ?? 0,
-      'Centro-Oeste': map?.get('Centro-Oeste') ?? 0,
-      Sudeste: map?.get('Sudeste') ?? 0,
-      Sul: map?.get('Sul') ?? 0,
+      Norte: Math.round(map?.get('Norte') ?? 0),
+      Nordeste: Math.round(map?.get('Nordeste') ?? 0),
+      'Centro-Oeste': Math.round(map?.get('Centro-Oeste') ?? 0),
+      Sudeste: Math.round(map?.get('Sudeste') ?? 0),
+      Sul: Math.round(map?.get('Sul') ?? 0),
     };
   });
 

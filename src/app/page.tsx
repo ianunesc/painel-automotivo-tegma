@@ -10,6 +10,7 @@ import CreditChart from '@/components/dashboard/CreditChart';
 import RegionDonut from '@/components/dashboard/RegionDonut';
 import BrandMiniRanking from '@/components/dashboard/BrandMiniRanking';
 import FleetSection from '@/components/dashboard/FleetSection';
+import FleetHistoryChart from '@/components/dashboard/FleetHistoryChart';
 
 function toYm(dateStr: string) {
   return dateStr.slice(0, 7);
@@ -73,6 +74,13 @@ export default async function DashboardPage() {
   const frotaValor = annual.find((a) => a.indicator === 'frota_circulante' && a.ref_year === ultimoAnoFrota)?.value ?? null;
   const idadeValor = annual.find((a) => a.indicator === 'idade_media_frota' && a.ref_year === ultimoAnoFrota)?.value ?? null;
 
+  const anosFrotaAsc = [...anosFrota].sort((a, b) => a - b);
+  const frotaHistorico = anosFrotaAsc.map((ano) => ({
+    ano,
+    frota: annual.find((a) => a.indicator === 'frota_circulante' && a.ref_year === ano)?.value ?? null,
+    idade: annual.find((a) => a.indicator === 'idade_media_frota' && a.ref_year === ano)?.value ?? null,
+  }));
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -131,6 +139,11 @@ export default async function DashboardPage() {
           <FleetSection frota={frotaValor} idadeMedia={idadeValor} ano={ultimoAnoFrota} />
         </section>
       </div>
+
+      <section className="card">
+        <h2 className="mb-2 text-sm font-medium text-tegma-dark">Frota — histórico anual</h2>
+        <FleetHistoryChart data={frotaHistorico} />
+      </section>
     </div>
   );
 }

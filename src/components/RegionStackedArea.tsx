@@ -18,8 +18,8 @@ export default function RegionStackedArea({ data }: { data: RegionPoint[] }) {
       <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-        <YAxis tick={{ fontSize: 12 }} />
-        <Tooltip />
+        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => Math.round(v).toLocaleString('pt-BR')} />
+        <Tooltip formatter={(v) => Math.round(Number(v)).toLocaleString('pt-BR')} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {Object.keys(CORES).map((regiao) => (
           <Area key={regiao} type="monotone" dataKey={regiao} stackId="1" stroke={CORES[regiao]} fill={CORES[regiao]} fillOpacity={0.75} />

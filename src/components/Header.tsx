@@ -19,12 +19,20 @@ export default function Header() {
             </Link>
             <p className="text-xs text-text-muted">Uma iniciativa do RI da Tegma (B3: TGMA3)</p>
           </div>
-          <a
-            href="https://ri.tegma.com.br"
-            className="flex items-center gap-1 text-sm font-medium text-tegma-blue hover:underline"
-          >
-            ← Voltar ao RI da Tegma
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://ri.tegma.com.br"
+              className="flex items-center gap-1 text-sm font-medium text-tegma-blue hover:underline"
+            >
+              ← Voltar ao RI da Tegma
+            </a>
+            <Link
+              href="/admin"
+              className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-text-secondary hover:bg-surface-muted hover:text-tegma-dark"
+            >
+              Admin
+            </Link>
+          </div>
         </div>
         <nav className="flex flex-wrap gap-1">
           {NAV.map((item) => (

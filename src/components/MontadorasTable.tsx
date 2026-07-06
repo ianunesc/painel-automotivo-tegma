@@ -56,12 +56,12 @@ export default function MontadorasTable({ linhas }: { linhas: MontadoraLinha[] }
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left text-text-secondary">
-            <th className="py-2">#</th>
-            <th className="py-2">Marca</th>
-            <th className="py-2 text-right">Unidades</th>
-            <th className="py-2">Share</th>
-            <th className="py-2 text-right">Δ volume</th>
-            <th className="py-2 text-right">Δ share</th>
+            <th className="py-2 pr-2">#</th>
+            <th className="py-2 pr-4">Marca</th>
+            <th className="py-2 pr-6 text-right">Unidades</th>
+            <th className="py-2 pr-4 min-w-[140px]">Share</th>
+            <th className="py-2 pl-4 text-right">Δ volume</th>
+            <th className="py-2 pl-4 text-right">Δ share</th>
           </tr>
         </thead>
         <tbody>
@@ -88,10 +88,10 @@ function Linha({ linha, pos, maxShare, apagada }: { linha: MontadoraLinha; pos: 
   const largura = Math.max(2, Math.min(100, (linha.shareA / maxShare) * 100));
   return (
     <tr className="border-b border-border last:border-0">
-      <td className="py-1.5 text-text-muted">{pos}</td>
-      <td className={`py-1.5 ${apagada ? 'italic text-text-secondary' : 'text-foreground'}`}>{linha.brand}</td>
-      <td className="py-1.5 text-right">{Math.round(linha.unitsA).toLocaleString('pt-BR')}</td>
-      <td className="py-1.5">
+      <td className="py-1.5 pr-2 text-text-muted">{pos}</td>
+      <td className={`py-1.5 pr-4 ${apagada ? 'italic text-text-secondary' : 'text-foreground'}`}>{linha.brand}</td>
+      <td className="py-1.5 pr-6 text-right">{Math.round(linha.unitsA).toLocaleString('pt-BR')}</td>
+      <td className="py-1.5 pr-4">
         <div className="flex items-center gap-2">
           <div className="h-1.5 flex-1 rounded bg-surface-muted">
             <div className="h-1.5 rounded bg-tegma-blue" style={{ width: `${largura}%` }} />
@@ -99,10 +99,10 @@ function Linha({ linha, pos, maxShare, apagada }: { linha: MontadoraLinha; pos: 
           <span className="w-12 text-right text-text-secondary">{(linha.shareA * 100).toFixed(1)}%</span>
         </div>
       </td>
-      <td className={`py-1.5 text-right ${corVol}`}>
+      <td className={`py-1.5 pl-4 text-right ${corVol}`}>
         {linha.deltaUnitsPct === null ? '—' : `${linha.deltaUnitsPct > 0 ? '+' : ''}${(linha.deltaUnitsPct * 100).toFixed(1)}%`}
       </td>
-      <td className={`py-1.5 text-right ${corShare}`}>
+      <td className={`py-1.5 pl-4 text-right ${corShare}`}>
         {`${linha.deltaSharePP > 0 ? '+' : ''}${(linha.deltaSharePP * 100).toFixed(2)} p.p.`}
       </td>
     </tr>
