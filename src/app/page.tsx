@@ -10,7 +10,7 @@ import CreditChart from '@/components/dashboard/CreditChart';
 import RegionDonut from '@/components/dashboard/RegionDonut';
 import BrandMiniRanking from '@/components/dashboard/BrandMiniRanking';
 import FleetSection from '@/components/dashboard/FleetSection';
-import FleetHistoryChart from '@/components/dashboard/FleetHistoryChart';
+import FleetMiniChart from '@/components/dashboard/FleetMiniChart';
 
 function toYm(dateStr: string) {
   return dateStr.slice(0, 7);
@@ -137,13 +137,11 @@ export default async function DashboardPage() {
         <section className="card">
           <h2 className="mb-2 text-sm font-medium text-tegma-dark">Frota</h2>
           <FleetSection frota={frotaValor} idadeMedia={idadeValor} ano={ultimoAnoFrota} />
+          <div className="mt-2">
+            <FleetMiniChart data={frotaHistorico} />
+          </div>
         </section>
       </div>
-
-      <section className="card">
-        <h2 className="mb-2 text-sm font-medium text-tegma-dark">Frota — histórico anual</h2>
-        <FleetHistoryChart data={frotaHistorico} />
-      </section>
     </div>
   );
 }
