@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8f9;
+  --foreground: #0d191d;
+
+  /* Identidade Tegma */
+  --tegma-orange: #ec6707;
+  --tegma-orange-dark: #b34f05;
+  --tegma-orange-light: #ef8935;
+  --tegma-orange-xlight: #fdede1;
+  --tegma-accent: #fa7600;
+  --tegma-blue: #2f80ed;
+  --tegma-dark: #0d191d;
+
+  --surface: #ffffff;
+  --surface-muted: #f1f3f4;
+  --border: #e1e4e6;
+  --text-secondary: #5f6b6f;
+  --text-muted: #8a9498;
+
+  --heat-min: #faeeda;
+  --heat-max: #d85a30;
+
+  --success: #1d9e75;
+  --danger: #e24b4a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-tegma-orange: var(--tegma-orange);
+  --color-tegma-orange-dark: var(--tegma-orange-dark);
+  --color-tegma-orange-light: var(--tegma-orange-light);
+  --color-tegma-orange-xlight: var(--tegma-orange-xlight);
+  --color-tegma-accent: var(--tegma-accent);
+  --color-tegma-blue: var(--tegma-blue);
+  --color-tegma-dark: var(--tegma-dark);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer components {
+  .selectPeriodo {
+    @apply min-w-[130px] rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-foreground;
+  }
+  .btnPrimary {
+    @apply rounded-lg bg-tegma-orange px-4 py-2 text-sm font-medium text-white transition hover:bg-tegma-orange-dark disabled:opacity-50;
+  }
+  .btnSecondary {
+    @apply rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted;
+  }
+  .btnToggleActive {
+    @apply bg-tegma-orange-xlight text-tegma-orange-dark;
+  }
+  .card {
+    @apply rounded-xl border border-border bg-surface p-4;
+  }
+}
