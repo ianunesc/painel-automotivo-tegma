@@ -17,11 +17,11 @@ export default async function HistoricoPage({
 
   // Colunas do mais antigo (k=hN) ao mais recente (k=0), filtrando períodos que ainda não começaram.
   const colunas = Array.from({ length: hN + 1 }, (_, i) => hN - i)
-    .map((k) => ({ k, ...shiftPeriod(hCode, hYear, k) }))
+    .map((k) => ({ k, ...shiftPeriod(hCode, hYear, k, latestMonth) }))
     .filter((c) => c.start >= '2015-01');
 
-  const start = colunas[0]?.start ?? shiftPeriod(hCode, hYear, hN).start;
-  const end = colunas[colunas.length - 1]?.end ?? shiftPeriod(hCode, hYear, 0).end;
+  const start = colunas[0]?.start ?? shiftPeriod(hCode, hYear, hN, latestMonth).start;
+  const end = colunas[colunas.length - 1]?.end ?? shiftPeriod(hCode, hYear, 0, latestMonth).end;
 
   const [monthly, businessDays] = await Promise.all([
     fetchMonthlyValues(INDICATOR_ORDER, start, end),
@@ -41,7 +41,7 @@ export default async function HistoricoPage({
 
   const colunasComputadas = colunas.map((c) => ({
     ...c,
-    label: labelForShiftedPeriod(hCode, c.start),
+    label: labelForShiftedPeriod(hCode, c.start, latestMonth),
     parcial: isPartialRange(hCode, parseInt(c.start.slice(0, 4), 10), latestMonth) && c.k === 0,
     valores: computePeriodValues(byIndicator, diasUteis, c.start, c.end),
   }));
@@ -75,7 +75,7 @@ export default async function HistoricoPage({
       <div className="card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium text-tegma-dark">
-            {labelForShiftedPeriod(hCode, colunasComputadas[colunasComputadas.length - 1]?.start ?? start)}
+            {labelForShiftedPeriod(hCode, colunasComputadas[colunasComputadas.length - 1]?.start ?? start, latestMonth)}
             {' '}e {hN} períodos anteriores
           </h2>
           <ExportExcelButton filename="historico" rows={exportRows} fonte="Anfavea, Banco Central (SGS)" />

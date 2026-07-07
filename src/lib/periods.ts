@@ -1,5 +1,10 @@
-// Seletor de período (4 campos): lista única de 20 tipos, usada em todas as análises.
+// Seletor de período (4 campos): lista única de tipos, usada em todas as análises.
 // Meses são representados como strings 'YYYY-MM' para evitar problemas de fuso horário.
+//
+// O tipo 'YTD' (Acumulado do ano) vai de janeiro até o último mês com dados
+// disponíveis — em QUALQUER ano selecionado, para que "Acumulado 2026 vs
+// Acumulado 2025" compare janelas idênticas (ex.: jan-mai vs jan-mai).
+// Por isso várias funções recebem `latestMonth` ('YYYY-MM').
 
 export type PeriodCode =
   | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6'
@@ -7,6 +12,7 @@ export type PeriodCode =
   | 'T1' | 'T2' | 'T3' | 'T4'
   | 'S1' | 'S2'
   | 'N9'
+  | 'YTD'
   | 'AA';
 
 const MESES = [
@@ -15,6 +21,7 @@ const MESES = [
 ];
 
 export const PERIOD_OPTIONS: { code: PeriodCode; label: string }[] = [
+  { code: 'YTD', label: 'Acumulado do ano' },
   ...MESES.map((m, i) => ({ code: `M${i + 1}` as PeriodCode, label: m })),
   { code: 'T1', label: 'T1' },
   { code: 'T2', label: 'T2' },
@@ -28,13 +35,19 @@ export const PERIOD_OPTIONS: { code: PeriodCode; label: string }[] = [
 
 export const ANO_MINIMO = 2015;
 
+/** Mês final (1-12) do acumulado do ano, derivado do último mês com dados. */
+export function ytdEndMonth(latestMonth?: string): number {
+  return latestMonth ? parseInt(latestMonth.slice(5, 7), 10) : 12;
+}
+
 /** Retorna o mês final (1-12) coberto por um período dentro do ano. */
-function endMonthOf(code: PeriodCode): number {
+function endMonthOf(code: PeriodCode, latestMonth?: string): number {
   if (code[0] === 'M') return parseInt(code.slice(1), 10);
   if (code[0] === 'T') return parseInt(code.slice(1), 10) * 3;
   if (code === 'S1') return 6;
   if (code === 'S2') return 12;
   if (code === 'N9') return 9;
+  if (code === 'YTD') return ytdEndMonth(latestMonth);
   return 12; // AA
 }
 
@@ -44,7 +57,7 @@ function startMonthOf(code: PeriodCode): number {
   if (code[0] === 'T') return (parseInt(code.slice(1), 10) - 1) * 3 + 1;
   if (code === 'S1') return 1;
   if (code === 'S2') return 7;
-  return 1; // N9, AA
+  return 1; // N9, YTD, AA
 }
 
 function ym(year: number, month: number): string {
@@ -52,8 +65,8 @@ function ym(year: number, month: number): string {
 }
 
 /** Intervalo de meses ('YYYY-MM') cobertos pelo período, início e fim inclusive. */
-export function monthRange(code: PeriodCode, year: number): { start: string; end: string } {
-  return { start: ym(year, startMonthOf(code)), end: ym(year, endMonthOf(code)) };
+export function monthRange(code: PeriodCode, year: number, latestMonth?: string): { start: string; end: string } {
+  return { start: ym(year, startMonthOf(code)), end: ym(year, endMonthOf(code, latestMonth)) };
 }
 
 /** Lista de todos os meses ('YYYY-MM') entre start e end, inclusive. */
@@ -82,7 +95,11 @@ export function mesLabel(monthStr: string): string {
   return `${MESES[m - 1].slice(0, 3)}/${String(y).slice(2)}`;
 }
 
-export function periodLabel(code: PeriodCode, year: number): string {
+export function periodLabel(code: PeriodCode, year: number, latestMonth?: string): string {
+  if (code === 'YTD') {
+    const fim = ytdEndMonth(latestMonth);
+    return `Jan–${MESES[fim - 1].slice(0, 3)} ${year}`;
+  }
   const opt = PERIOD_OPTIONS.find((o) => o.code === code)!;
   if (code[0] === 'M') return `${opt.label}/${year}`;
   return `${opt.label} ${year}`;
@@ -90,7 +107,7 @@ export function periodLabel(code: PeriodCode, year: number): string {
 
 /** Um período é parcial se seu mês final ainda não chegou nos dados disponíveis. */
 export function isPartial(code: PeriodCode, year: number, latestMonth: string): boolean {
-  const { end } = monthRange(code, year);
+  const { end } = monthRange(code, year, latestMonth);
   return end > latestMonth;
 }
 
@@ -102,7 +119,7 @@ export function differentDuration(codeA: PeriodCode, codeB: PeriodCode): boolean
 function tipoDe(code: PeriodCode): string {
   if (code[0] === 'M') return 'M';
   if (code[0] === 'T') return 'T';
-  return code; // S1, S2, N9, AA são cada um sua própria categoria
+  return code; // S1, S2, N9, YTD, AA são cada um sua própria categoria
 }
 
 /** Sugestão automática de comparação: mesmo período do ano anterior. */
@@ -121,18 +138,18 @@ export function periodStepMonths(code: PeriodCode): number {
   if (code[0] === 'M') return 1;
   if (code[0] === 'T') return 3;
   if (code === 'S1' || code === 'S2') return 6;
-  return 12; // N9, AA — âncora anual
+  return 12; // N9, YTD, AA — âncora anual
 }
 
 /** Intervalo do k-ésimo período anterior ao mesmo tipo (k=0 é o próprio período selecionado). */
-export function shiftPeriod(code: PeriodCode, year: number, k: number): { start: string; end: string } {
+export function shiftPeriod(code: PeriodCode, year: number, k: number, latestMonth?: string): { start: string; end: string } {
   const step = periodStepMonths(code);
-  const base = monthRange(code, year);
+  const base = monthRange(code, year, latestMonth);
   return { start: shiftMonth(base.start, -step * k), end: shiftMonth(base.end, -step * k) };
 }
 
 /** Rótulo de um período deslocado, derivado do seu mês inicial. */
-export function labelForShiftedPeriod(code: PeriodCode, start: string): string {
+export function labelForShiftedPeriod(code: PeriodCode, start: string, latestMonth?: string): string {
   const [y, m] = start.split('-').map(Number);
   if (code[0] === 'M') return mesLabel(start);
   if (code[0] === 'T') {
@@ -141,6 +158,10 @@ export function labelForShiftedPeriod(code: PeriodCode, start: string): string {
   }
   if (code === 'S1' || code === 'S2') return `${m === 1 ? 'S1' : 'S2'} ${String(y).slice(2)}`;
   if (code === 'N9') return `9M ${y}`;
+  if (code === 'YTD') {
+    const fim = ytdEndMonth(latestMonth);
+    return `Jan–${MESES[fim - 1].slice(0, 3)} ${String(y).slice(2)}`;
+  }
   return `${y}`; // AA
 }
 
@@ -150,7 +171,7 @@ export function readPeriodParams(
   latestMonth: string
 ) {
   const anoAtual = parseInt(latestMonth.slice(0, 4), 10);
-  const pCode = (searchParams.pCode as PeriodCode) || 'AA';
+  const pCode = (searchParams.pCode as PeriodCode) || 'YTD';
   const pYear = searchParams.pYear ? parseInt(searchParams.pYear as string, 10) : anoAtual;
   const def = defaultComparison(pCode, pYear);
   const cCode = (searchParams.cCode as PeriodCode) || def.code;
@@ -164,7 +185,7 @@ export function readHistoricoParams(
   latestMonth: string
 ) {
   const anoAtual = parseInt(latestMonth.slice(0, 4), 10);
-  const hCode = (searchParams.hCode as PeriodCode) || 'AA';
+  const hCode = (searchParams.hCode as PeriodCode) || 'YTD';
   const hYear = searchParams.hYear ? parseInt(searchParams.hYear as string, 10) : anoAtual;
   const hN = searchParams.hN ? parseInt(searchParams.hN as string, 10) : 8;
   return { hCode, hYear, hN };

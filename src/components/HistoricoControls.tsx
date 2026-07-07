@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { PERIOD_OPTIONS, anosDisponiveis, readHistoricoParams } from '@/lib/periods';
+import { optionLabel } from '@/components/PeriodSelector';
 
 export default function HistoricoControls({ latestMonth }: { latestMonth: string }) {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function HistoricoControls({ latestMonth }: { latestMonth: string
       <label className="flex flex-col gap-1 text-xs text-text-secondary">
         Período
         <select value={hCode} onChange={(e) => update({ hCode: e.target.value })} className="selectPeriodo">
-          {PERIOD_OPTIONS.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}
+          {PERIOD_OPTIONS.map((o) => <option key={o.code} value={o.code}>{optionLabel(o.code, o.label, latestMonth)}</option>)}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-xs text-text-secondary">

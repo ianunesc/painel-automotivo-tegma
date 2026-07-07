@@ -15,8 +15,10 @@ export default async function RegioesPage({
   const latestMonth = await fetchLatestMonth();
   const { pCode, pYear, cCode, cYear } = readPeriodParams(sp, latestMonth);
 
-  const rangeA = monthRange(pCode, pYear);
-  const rangeB = monthRange(cCode, cYear);
+  const rangeA = monthRange(pCode, pYear, latestMonth);
+  const rangeB = monthRange(cCode, cYear, latestMonth);
+  const labelA = periodLabel(pCode, pYear, latestMonth);
+  const labelB = periodLabel(cCode, cYear, latestMonth);
   const trend12Start = shiftMonth(latestMonth, -11);
   const start = [rangeA.start, rangeB.start, trend12Start].sort()[0];
   const end = [rangeA.end, rangeB.end, latestMonth].sort().reverse()[0];
@@ -59,10 +61,10 @@ export default async function RegioesPage({
 
   const exportRows = linhas.map((l) => ({
     Região: l.regiao,
-    [`Unidades — ${periodLabel(pCode, pYear)}`]: Math.round(l.unitsA),
-    [`Unidades — ${periodLabel(cCode, cYear)}`]: Math.round(l.unitsB),
-    [`Share — ${periodLabel(pCode, pYear)} (%)`]: Math.round(l.shareA * 1000) / 10,
-    [`Share — ${periodLabel(cCode, cYear)} (%)`]: Math.round(l.shareB * 1000) / 10,
+    [`Unidades — ${labelA}`]: Math.round(l.unitsA),
+    [`Unidades — ${labelB}`]: Math.round(l.unitsB),
+    [`Share — ${labelA} (%)`]: Math.round(l.shareA * 1000) / 10,
+    [`Share — ${labelB} (%)`]: Math.round(l.shareB * 1000) / 10,
   }));
 
   return (
@@ -76,16 +78,16 @@ export default async function RegioesPage({
 
       <div className="card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-tegma-dark">{periodLabel(pCode, pYear)} vs {periodLabel(cCode, cYear)}</h2>
+          <h2 className="text-sm font-medium text-tegma-dark">{labelA} vs {labelB}</h2>
           <ExportExcelButton filename="regioes" rows={exportRows} fonte="Fenabrave" />
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-text-secondary">
               <th className="py-2">Região</th>
-              <th className="py-2 text-right">Unidades — {periodLabel(pCode, pYear)}</th>
+              <th className="py-2 text-right">Unidades — {labelA}</th>
               <th className="py-2 text-right">Share</th>
-              <th className="py-2 text-right">Unidades — {periodLabel(cCode, cYear)}</th>
+              <th className="py-2 text-right">Unidades — {labelB}</th>
               <th className="py-2 text-right">Share</th>
               <th className="py-2 text-right">Δ volume</th>
               <th className="py-2 text-right">Δ share (p.p.)</th>

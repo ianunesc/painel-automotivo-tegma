@@ -3,8 +3,14 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   PERIOD_OPTIONS, anosDisponiveis, isPartial, differentDuration,
-  defaultComparison, readPeriodParams, type PeriodCode,
+  defaultComparison, readPeriodParams, mesLabel, type PeriodCode,
 } from '@/lib/periods';
+
+/** Rótulo das opções, com o acumulado do ano mostrando até que mês ele vai. */
+export function optionLabel(code: PeriodCode, label: string, latestMonth: string): string {
+  if (code === 'YTD') return `Acumulado do ano (jan–${mesLabel(latestMonth).split('/')[0].toLowerCase()})`;
+  return label;
+}
 
 export default function PeriodSelector({ latestMonth }: { latestMonth: string }) {
   const router = useRouter();
@@ -52,7 +58,7 @@ export default function PeriodSelector({ latestMonth }: { latestMonth: string })
       <Campo label="Período">
         <select value={pCode} onChange={(e) => mudarAnalisePeriodo(e.target.value)} className="selectPeriodo">
           {PERIOD_OPTIONS.map((o) => (
-            <option key={o.code} value={o.code}>{o.label}</option>
+            <option key={o.code} value={o.code}>{optionLabel(o.code, o.label, latestMonth)}</option>
           ))}
         </select>
       </Campo>
@@ -67,7 +73,7 @@ export default function PeriodSelector({ latestMonth }: { latestMonth: string })
       <Campo label="Comparar — período">
         <select value={cCode} onChange={(e) => update({ cCode: e.target.value })} className="selectPeriodo">
           {PERIOD_OPTIONS.map((o) => (
-            <option key={o.code} value={o.code}>{o.label}</option>
+            <option key={o.code} value={o.code}>{optionLabel(o.code, o.label, latestMonth)}</option>
           ))}
         </select>
       </Campo>

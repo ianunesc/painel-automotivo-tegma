@@ -15,8 +15,10 @@ export default async function MontadorasPage({
   const latestMonth = await fetchLatestMonth();
   const { pCode, pYear, cCode, cYear } = readPeriodParams(sp, latestMonth);
 
-  const rangeA = monthRange(pCode, pYear);
-  const rangeB = monthRange(cCode, cYear);
+  const rangeA = monthRange(pCode, pYear, latestMonth);
+  const rangeB = monthRange(cCode, cYear, latestMonth);
+  const labelA = periodLabel(pCode, pYear, latestMonth);
+  const labelB = periodLabel(cCode, cYear, latestMonth);
   const start = rangeA.start < rangeB.start ? rangeA.start : rangeB.start;
   const end = rangeA.end > rangeB.end ? rangeA.end : rangeB.end;
 
@@ -45,9 +47,9 @@ export default async function MontadorasPage({
   const exportRows = linhas.map((l, i) => ({
     Posição: l.brand === 'Outras' ? '—' : i + 1,
     Marca: l.brand,
-    [`Unidades — ${periodLabel(pCode, pYear)}`]: Math.round(l.unitsA),
-    [`Share — ${periodLabel(pCode, pYear)} (%)`]: Math.round(l.shareA * 1000) / 10,
-    [`Unidades — ${periodLabel(cCode, cYear)}`]: Math.round(l.unitsB),
+    [`Unidades — ${labelA}`]: Math.round(l.unitsA),
+    [`Share — ${labelA} (%)`]: Math.round(l.shareA * 1000) / 10,
+    [`Unidades — ${labelB}`]: Math.round(l.unitsB),
     'Δ volume (%)': l.deltaUnitsPct === null ? '' : Math.round(l.deltaUnitsPct * 1000) / 10,
     'Δ share (p.p.)': Math.round(l.deltaSharePP * 10000) / 100,
   }));
@@ -63,14 +65,14 @@ export default async function MontadorasPage({
 
       <div className="card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-tegma-dark">{periodLabel(pCode, pYear)} vs {periodLabel(cCode, cYear)}</h2>
+          <h2 className="text-sm font-medium text-tegma-dark">{labelA} vs {labelB}</h2>
           <ExportExcelButton filename="montadoras" rows={exportRows} fonte="Autoo (Fenabrave), Anfavea" />
         </div>
         <MontadorasTable linhas={linhas} />
       </div>
 
       <div className="card">
-        <h2 className="mb-2 text-sm font-medium text-tegma-dark">Top 10 — {periodLabel(pCode, pYear)}</h2>
+        <h2 className="mb-2 text-sm font-medium text-tegma-dark">Top 10 — {labelA}</h2>
         <BrandBarChart data={linhas.map((l) => ({ brand: l.brand, units: l.unitsA }))} />
       </div>
     </div>

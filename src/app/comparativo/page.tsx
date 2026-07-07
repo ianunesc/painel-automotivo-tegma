@@ -15,10 +15,12 @@ export default async function ComparativoPage({
   const latestMonth = await fetchLatestMonth();
   const { pCode, pYear, cCode, cYear } = readPeriodParams(sp, latestMonth);
 
-  const rangeA = monthRange(pCode, pYear);
-  const rangeB = monthRange(cCode, cYear);
+  const rangeA = monthRange(pCode, pYear, latestMonth);
+  const rangeB = monthRange(cCode, cYear, latestMonth);
   const start = rangeA.start < rangeB.start ? rangeA.start : rangeB.start;
   const end = rangeA.end > rangeB.end ? rangeA.end : rangeB.end;
+  const labelA = periodLabel(pCode, pYear, latestMonth);
+  const labelB = periodLabel(cCode, cYear, latestMonth);
 
   const [monthly, businessDays] = await Promise.all([
     fetchMonthlyValues(INDICATOR_ORDER, start, end),
@@ -57,8 +59,8 @@ export default async function ComparativoPage({
 
   const exportRows = linhas.map((l) => ({
     Indicador: l.label,
-    [`${periodLabel(pCode, pYear)}`]: l.a ?? '',
-    [`${periodLabel(cCode, cYear)}`]: l.b ?? '',
+    [labelA]: l.a ?? '',
+    [labelB]: l.b ?? '',
     'Variação (%)': l.a !== null && l.b !== null ? Math.round((pctDelta(l.a, l.b) ?? 0) * 1000) / 10 : '',
   }));
 
@@ -74,7 +76,7 @@ export default async function ComparativoPage({
       <div className="card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium text-tegma-dark">
-            {periodLabel(pCode, pYear)} vs {periodLabel(cCode, cYear)}
+            {labelA} vs {labelB}
           </h2>
           <ExportExcelButton filename="comparativo" rows={exportRows} fonte="Anfavea, Banco Central (SGS)" />
         </div>
@@ -82,8 +84,8 @@ export default async function ComparativoPage({
           <thead>
             <tr className="border-b border-border text-left text-text-secondary">
               <th className="py-2">Indicador</th>
-              <th className="py-2 text-right">{periodLabel(pCode, pYear)}</th>
-              <th className="py-2 text-right">{periodLabel(cCode, cYear)}</th>
+              <th className="py-2 text-right">{labelA}</th>
+              <th className="py-2 text-right">{labelB}</th>
               <th className="py-2 text-right">Variação</th>
             </tr>
           </thead>
