@@ -253,8 +253,18 @@ async function seedAutooAno(ano) {
     const { data: licRow } = await supabase.from('monthly_values').select('value').eq('indicator', 'licenciamento').eq('ref_month', refMonth).maybeSingle();
     if (!licRow) { mesesAlerta++; continue; }
     const licenciamentoTotal = licRow.value * 1000;
-    const outras = licenciamentoTotal - somaTop40;
-    if (outras < 0) { mesesAlerta++; continue; }
+    let outras = licenciamentoTotal - somaTop40;
+    if (outras < 0) {
+      // Divergência metodológica Fenabrave × Anfavea: até 0,5%, publica com "Outras" = 0
+      const divergencia = -outras / licenciamentoTotal;
+      if (divergencia <= 0.005) {
+        console.log(`  ${refMonth}: fontes divergem em ${-outras} un. (${(divergencia * 100).toFixed(2)}%) — publicado com "Outras" = 0.`);
+        outras = 0;
+      } else {
+        mesesAlerta++;
+        continue;
+      }
+    }
 
     const rows = [...top40.map((mk) => ({ ref_month: refMonth, brand: mk.brand, units: mk.units, source: 'autoo' })), { ref_month: refMonth, brand: 'Outras', units: outras, source: 'autoo' }];
     const { error } = await supabase.from('brand_sales').upsert(rows, { onConflict: 'ref_month,brand' });

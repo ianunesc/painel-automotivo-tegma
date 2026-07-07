@@ -2,6 +2,11 @@ import * as cheerio from 'cheerio';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { logIngest } from './common';
 
+// Fenabrave (base do Autoo) e Anfavea medem quase o mesmo universo, mas com
+// cortes/momentos de apuração diferentes. Divergências de até este percentual
+// são tratadas como metodológicas: o mês é publicado com "Outras" = 0.
+export const TOLERANCIA_DIVERGENCIA = 0.005; // 0,5%
+
 async function fetchRankingAno(year: number) {
   const url = `https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${year}/`;
   const res = await fetch(url);
@@ -63,16 +68,29 @@ export async function ingestAutooYear(supabase: SupabaseClient, year: number) {
     }
 
     const licenciamentoTotal = licRow.value * 1000; // volta de "mil un." para unidades
-    const outras = licenciamentoTotal - somaTop40;
+    let outras = licenciamentoTotal - somaTop40;
 
     if (outras < 0) {
-      await logIngest(
-        supabase, 'autoo', 'alerta',
-        `Soma do Top 40 (${somaTop40}) excede o licenciamento Anfavea (${licenciamentoTotal}) em ${refMonth} — revisar antes de publicar.`,
-        refMonth
-      );
-      mesesComAlerta++;
-      continue;
+      // Fenabrave (base do Autoo) e Anfavea divergem levemente em alguns meses.
+      // Dentro da tolerância, publica com "Outras" = 0 e registra a divergência;
+      // acima dela, segura o mês para revisão manual.
+      const divergencia = -outras / licenciamentoTotal;
+      if (divergencia <= TOLERANCIA_DIVERGENCIA) {
+        await logIngest(
+          supabase, 'autoo', 'alerta',
+          `Fontes divergem em ${-outras} unidades (${(divergencia * 100).toFixed(2)}%) em ${refMonth} — publicado com "Outras" = 0.`,
+          refMonth
+        );
+        outras = 0;
+      } else {
+        await logIngest(
+          supabase, 'autoo', 'alerta',
+          `Soma do Top 40 (${somaTop40}) excede o licenciamento Anfavea (${licenciamentoTotal}) em ${(divergencia * 100).toFixed(2)}% em ${refMonth} — acima da tolerância, revisar antes de publicar.`,
+          refMonth
+        );
+        mesesComAlerta++;
+        continue;
+      }
     }
 
     const rows = [
