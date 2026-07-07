@@ -31,24 +31,29 @@ export default async function ComparativoPage({
   const valuesA = computePeriodValues(byIndicator, diasUteis, rangeA.start, rangeA.end);
   const valuesB = computePeriodValues(byIndicator, diasUteis, rangeB.start, rangeB.end);
 
-  const linhas = [
-    ...INDICATOR_ORDER.map((ind) => ({
-      key: ind,
+  const licDiaUtil = {
+    key: 'licenciamento_dia_util' as const,
+    label: 'Licenciamento por dia útil',
+    unit: 'mil un./dia',
+    decimals: 2,
+    inverse: false,
+    a: valuesA.licenciamento_dia_util,
+    b: valuesB.licenciamento_dia_util,
+  };
+
+  const linhas = INDICATOR_ORDER.flatMap((ind) => {
+    const linha = {
+      key: ind as string,
       label: INDICATOR_META[ind].label,
       unit: INDICATOR_META[ind].unit,
       decimals: INDICATOR_META[ind].decimals,
+      inverse: INDICATOR_META[ind].inverse ?? false,
       a: valuesA[ind],
       b: valuesB[ind],
-    })),
-    {
-      key: 'licenciamento_dia_util' as const,
-      label: 'Licenciamento por dia útil',
-      unit: 'mil un./dia',
-      decimals: 2,
-      a: valuesA.licenciamento_dia_util,
-      b: valuesB.licenciamento_dia_util,
-    },
-  ];
+    };
+    // Licenciamento por dia útil entra logo abaixo do licenciamento
+    return ind === 'licenciamento' ? [linha, licDiaUtil] : [linha];
+  });
 
   const exportRows = linhas.map((l) => ({
     Indicador: l.label,
@@ -85,7 +90,9 @@ export default async function ComparativoPage({
           <tbody>
             {linhas.map((l) => {
               const d = pctDelta(l.a, l.b);
-              const cor = d === null ? 'text-text-muted' : d > 0 ? 'text-success' : d < 0 ? 'text-danger' : 'text-text-muted';
+              // Para juros e inadimplência, subir é ruim: variação positiva fica vermelha
+              const bom = d === null ? null : l.inverse ? d < 0 : d > 0;
+              const cor = d === null || d === 0 ? 'text-text-muted' : bom ? 'text-success' : 'text-danger';
               return (
                 <tr key={l.key} className="border-b border-border last:border-0">
                   <td className="py-2 text-foreground">{l.label} <span className="text-xs text-text-muted">({l.unit})</span></td>
@@ -101,7 +108,7 @@ export default async function ComparativoPage({
 
       <div className="card">
         <h2 className="mb-2 text-sm font-medium text-tegma-dark">Variação por indicador</h2>
-        <ComparativeDeltaChart data={linhas.map((l) => ({ label: l.label, deltaPct: pctDelta(l.a, l.b) }))} />
+        <ComparativeDeltaChart data={linhas.map((l) => ({ label: l.label, deltaPct: pctDelta(l.a, l.b), inverse: l.inverse }))} />
       </div>
     </div>
   );

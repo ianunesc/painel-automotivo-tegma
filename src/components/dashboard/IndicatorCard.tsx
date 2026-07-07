@@ -2,8 +2,10 @@ function formatNumber(value: number, decimals: number) {
   return value.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
+const NEUTRO = 0.0005; // até ±0,05% considera estável
+
 export default function IndicatorCard({
-  label, value, unit, decimals, deltaPct, mesReferencia,
+  label, value, unit, decimals, deltaPct, mesReferencia, inverse = false,
 }: {
   label: string;
   value: number | null;
@@ -11,9 +13,14 @@ export default function IndicatorCard({
   decimals: number;
   deltaPct: number | null;
   mesReferencia: string;
+  /** true = subir é ruim (juros, inadimplência) — inverte a cor verde/vermelha. */
+  inverse?: boolean;
 }) {
-  const cor = deltaPct === null ? 'text-text-muted' : deltaPct > 0.05 ? 'text-success' : deltaPct < -0.05 ? 'text-danger' : 'text-text-muted';
-  const seta = deltaPct === null ? '' : deltaPct > 0.05 ? '▲' : deltaPct < -0.05 ? '▼' : '—';
+  const subiu = deltaPct !== null && deltaPct > NEUTRO;
+  const caiu = deltaPct !== null && deltaPct < -NEUTRO;
+  const bom = subiu !== inverse; // subir é bom, exceto nos invertidos (e cair é bom neles)
+  const cor = !subiu && !caiu ? 'text-text-muted' : bom ? 'text-success' : 'text-danger';
+  const seta = deltaPct === null ? '' : subiu ? '▲' : caiu ? '▼' : '—';
 
   return (
     <div className="card flex flex-col gap-1">

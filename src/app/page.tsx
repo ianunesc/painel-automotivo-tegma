@@ -101,6 +101,7 @@ export default async function DashboardPage() {
               decimals={meta.decimals}
               deltaPct={d}
               mesReferencia={mesLabel(latestMonth)}
+              inverse={meta.inverse}
             />
           );
         })}

@@ -2,10 +2,18 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-export default function ComparativeDeltaChart({ data }: { data: { label: string; deltaPct: number | null }[] }) {
+export default function ComparativeDeltaChart({
+  data,
+}: {
+  data: { label: string; deltaPct: number | null; inverse?: boolean }[];
+}) {
   const chartData = data
     .filter((d) => d.deltaPct !== null)
-    .map((d) => ({ label: d.label, delta: Math.round((d.deltaPct as number) * 1000) / 10 }));
+    .map((d) => ({
+      label: d.label,
+      delta: Math.round((d.deltaPct as number) * 1000) / 10,
+      inverse: d.inverse ?? false,
+    }));
 
   return (
     <ResponsiveContainer width="100%" height={Math.max(220, chartData.length * 36)}>
@@ -15,10 +23,12 @@ export default function ComparativeDeltaChart({ data }: { data: { label: string;
         <YAxis type="category" dataKey="label" tick={{ fontSize: 12 }} width={150} />
         <ReferenceLine x={0} stroke="var(--border)" />
         <Tooltip formatter={(v) => `${Number(v) > 0 ? '+' : ''}${v}%`} />
-        <Bar dataKey="delta">
-          {chartData.map((d, i) => (
-            <Cell key={i} fill={d.delta >= 0 ? 'var(--success)' : 'var(--danger)'} />
-          ))}
+        <Bar dataKey="delta" isAnimationActive={false}>
+          {chartData.map((d, i) => {
+            // Para juros e inadimplência, subir é ruim: barra positiva fica vermelha
+            const bom = d.inverse ? d.delta < 0 : d.delta >= 0;
+            return <Cell key={i} fill={bom ? 'var(--success)' : 'var(--danger)'} />;
+          })}
         </Bar>
       </BarChart>
     </ResponsiveContainer>

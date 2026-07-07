@@ -31,10 +31,13 @@ export default async function HistoricoPage({
   const byIndicator = buildSeriesMap(monthly);
   const diasUteis = buildDiasUteisMap(businessDays);
 
-  const linhasDef = [
-    ...INDICATOR_ORDER.map((ind) => ({ key: ind, label: INDICATOR_META[ind].label, decimals: INDICATOR_META[ind].decimals })),
-    { key: 'licenciamento_dia_util' as const, label: 'Licenciamento por dia útil', decimals: 2 },
-  ];
+  // Licenciamento por dia útil entra logo abaixo do licenciamento
+  const linhasDef = INDICATOR_ORDER.flatMap((ind) => {
+    const linha = { key: ind as 'licenciamento_dia_util' | typeof ind, label: INDICATOR_META[ind].label, decimals: INDICATOR_META[ind].decimals };
+    return ind === 'licenciamento'
+      ? [linha, { key: 'licenciamento_dia_util' as const, label: 'Licenciamento por dia útil', decimals: 2 }]
+      : [linha];
+  });
 
   const colunasComputadas = colunas.map((c) => ({
     ...c,

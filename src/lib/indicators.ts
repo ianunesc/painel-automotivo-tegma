@@ -11,6 +11,8 @@ export const INDICATOR_META: Record<Indicator, {
   rule: AggRule;
   source: string;
   group: 'mercado' | 'credito';
+  /** true = subir é ruim para o mercado (juros, inadimplência) — inverte a cor verde/vermelha. */
+  inverse?: boolean;
 }> = {
   licenciamento: { label: 'Licenciamento', unit: 'mil un.', decimals: 1, rule: 'sum', source: 'Anfavea', group: 'mercado' },
   producao: { label: 'Produção', unit: 'mil un.', decimals: 1, rule: 'sum', source: 'Anfavea', group: 'mercado' },
@@ -18,8 +20,8 @@ export const INDICATOR_META: Record<Indicator, {
   importados: { label: 'Venda de importados', unit: 'mil un.', decimals: 1, rule: 'sum', source: 'Anfavea', group: 'mercado' },
   credito_saldo: { label: 'Saldo de crédito PF', unit: 'R$ bi', decimals: 1, rule: 'last', source: 'Banco Central (SGS)', group: 'credito' },
   credito_concessao: { label: 'Concessões de crédito PF', unit: 'R$ bi', decimals: 1, rule: 'sum', source: 'Banco Central (SGS)', group: 'credito' },
-  credito_juros: { label: 'Taxa de juros PF', unit: '% a.a.', decimals: 1, rule: 'avg', source: 'Banco Central (SGS)', group: 'credito' },
-  credito_inadimplencia: { label: 'Inadimplência PF', unit: '%', decimals: 1, rule: 'avg', source: 'Banco Central (SGS)', group: 'credito' },
+  credito_juros: { label: 'Taxa de juros PF', unit: '% a.a.', decimals: 1, rule: 'avg', source: 'Banco Central (SGS)', group: 'credito', inverse: true },
+  credito_inadimplencia: { label: 'Inadimplência PF', unit: '%', decimals: 1, rule: 'avg', source: 'Banco Central (SGS)', group: 'credito', inverse: true },
 };
 
 export const INDICATOR_ORDER: Indicator[] = [
