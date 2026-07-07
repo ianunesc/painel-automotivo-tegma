@@ -18,14 +18,16 @@ function toYm(dateStr: string) {
 
 export default async function DashboardPage() {
   const latestMonth = await fetchLatestMonth();
-  const start = shiftMonth(latestMonth, -12);
-  const prevYearMonth = shiftMonth(latestMonth, -12);
+  // Janela mais larga (-15 meses) para que indicadores atrasados em relação ao
+  // licenciamento (ex.: crédito do BCB) ainda tenham o mesmo mês do ano anterior
+  // disponível para calcular a variação.
+  const start = shiftMonth(latestMonth, -15);
 
   const [monthly, businessDays, regionSales, brandSales, annual] = await Promise.all([
     fetchMonthlyValues(INDICATOR_ORDER, start, latestMonth),
     fetchBusinessDays(start, latestMonth),
-    fetchRegionSales(latestMonth, latestMonth),
-    fetchBrandSales(latestMonth, latestMonth),
+    fetchRegionSales(shiftMonth(latestMonth, -3), latestMonth),
+    fetchBrandSales(shiftMonth(latestMonth, -3), latestMonth),
     fetchAnnualValues(['frota_circulante', 'idade_media_frota']),
   ]);
 
@@ -37,12 +39,16 @@ export default async function DashboardPage() {
 
   const diasUteisMap = new Map(businessDays.map((b) => [toYm(b.ref_month), b.dias_uteis]));
 
-  function delta(indicator: Indicator) {
+  // Cada cartão mostra o mês mais recente que AQUELE indicador tem — fontes
+  // publicam em ritmos diferentes (BCB atrasa ~1 mês em relação à Anfavea).
+  function cardData(indicator: Indicator) {
     const serie = byIndicator.get(indicator);
-    const atual = serie?.get(latestMonth) ?? null;
-    const anterior = serie?.get(prevYearMonth) ?? null;
-    if (atual === null || anterior === null || anterior === 0) return { atual, delta: null };
-    return { atual, delta: (atual - anterior) / anterior };
+    if (!serie || serie.size === 0) return { atual: null, delta: null, mes: latestMonth };
+    const mes = [...serie.keys()].sort().pop()!;
+    const atual = serie.get(mes) ?? null;
+    const anterior = serie.get(shiftMonth(mes, -12)) ?? null;
+    if (atual === null || anterior === null || anterior === 0) return { atual, delta: null, mes };
+    return { atual, delta: (atual - anterior) / anterior, mes };
   }
 
   const meses12 = Array.from({ length: 12 }, (_, i) => shiftMonth(latestMonth, i - 11));
@@ -61,13 +67,23 @@ export default async function DashboardPage() {
     inadimplencia: byIndicator.get('credito_inadimplencia')?.get(m) ?? null,
   }));
 
-  const licAtual = byIndicator.get('licenciamento')?.get(latestMonth) ?? null;
-  const licAnterior = byIndicator.get('licenciamento')?.get(prevYearMonth) ?? null;
-  const diasAtual = diasUteisMap.get(latestMonth);
-  const diasAnterior = diasUteisMap.get(prevYearMonth);
-  const licPorDiaAtual = licAtual !== null && diasAtual ? aggregateLicPorDiaUtil([licAtual], [diasAtual]) : null;
+  const licCard = cardData('licenciamento');
+  const licAnterior = byIndicator.get('licenciamento')?.get(shiftMonth(licCard.mes, -12)) ?? null;
+  const diasAtual = diasUteisMap.get(licCard.mes);
+  const diasAnterior = diasUteisMap.get(shiftMonth(licCard.mes, -12));
+  const licPorDiaAtual = licCard.atual !== null && diasAtual ? aggregateLicPorDiaUtil([licCard.atual], [diasAtual]) : null;
   const licPorDiaAnterior = licAnterior !== null && diasAnterior ? aggregateLicPorDiaUtil([licAnterior], [diasAnterior]) : null;
   const licPorDiaDelta = licPorDiaAtual !== null && licPorDiaAnterior ? (licPorDiaAtual - licPorDiaAnterior) / licPorDiaAnterior : null;
+
+  // Regiões e montadoras: usa o mês mais recente com dados (podem atrasar em
+  // relação ao licenciamento — ex.: % regional depende de lançamento manual).
+  function ultimoMesCom<T extends { ref_month: string }>(rows: T[]): { mes: string | null; doMes: T[] } {
+    if (rows.length === 0) return { mes: null, doMes: [] };
+    const mes = rows.map((r) => toYm(r.ref_month)).sort().pop()!;
+    return { mes, doMes: rows.filter((r) => toYm(r.ref_month) === mes) };
+  }
+  const regioes = ultimoMesCom(regionSales);
+  const marcas = ultimoMesCom(brandSales);
 
   const anosFrota = [...new Set(annual.map((a) => a.ref_year))].sort((a, b) => b - a);
   const ultimoAnoFrota = anosFrota[0] ?? null;
@@ -91,7 +107,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {INDICATOR_ORDER.map((ind) => {
           const meta = INDICATOR_META[ind];
-          const { atual, delta: d } = delta(ind);
+          const { atual, delta: d, mes } = cardData(ind);
           return (
             <IndicatorCard
               key={ind}
@@ -100,7 +116,7 @@ export default async function DashboardPage() {
               unit={meta.unit}
               decimals={meta.decimals}
               deltaPct={d}
-              mesReferencia={mesLabel(latestMonth)}
+              mesReferencia={mesLabel(mes)}
               inverse={meta.inverse}
             />
           );
@@ -111,7 +127,7 @@ export default async function DashboardPage() {
           unit="mil un./dia"
           decimals={2}
           deltaPct={licPorDiaDelta}
-          mesReferencia={mesLabel(latestMonth)}
+          mesReferencia={mesLabel(licCard.mes)}
         />
       </div>
 
@@ -128,12 +144,16 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="card">
-          <h2 className="mb-2 text-sm font-medium text-tegma-dark">Share por região</h2>
-          <RegionDonut data={regionSales.map((r) => ({ region: r.region, sharePct: r.share_pct }))} />
+          <h2 className="mb-2 text-sm font-medium text-tegma-dark">
+            Share por região{regioes.mes ? ` — ${mesLabel(regioes.mes)}` : ''}
+          </h2>
+          <RegionDonut data={regioes.doMes.map((r) => ({ region: r.region, sharePct: r.share_pct }))} />
         </section>
         <section className="card">
-          <h2 className="mb-2 text-sm font-medium text-tegma-dark">Top montadoras — licenciamento</h2>
-          <BrandMiniRanking data={brandSales} />
+          <h2 className="mb-2 text-sm font-medium text-tegma-dark">
+            Top montadoras — licenciamento{marcas.mes ? ` — ${mesLabel(marcas.mes)}` : ''}
+          </h2>
+          <BrandMiniRanking data={marcas.doMes} />
         </section>
         <section className="card">
           <h2 className="mb-2 text-sm font-medium text-tegma-dark">Frota</h2>

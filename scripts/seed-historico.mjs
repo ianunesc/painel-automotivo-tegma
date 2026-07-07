@@ -223,7 +223,9 @@ async function seedBcb() {
 // ============================================================
 async function seedAutooAno(ano) {
   const url = `https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${ano}/`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' },
+  });
   if (!res.ok) { console.warn(`⚠ Autoo ${ano}: HTTP ${res.status}`); return; }
   const buf = await res.arrayBuffer();
   const html = new TextDecoder('iso-8859-1').decode(buf);
@@ -252,7 +254,7 @@ async function seedAutooAno(ano) {
 
     const { data: licRow } = await supabase.from('monthly_values').select('value').eq('indicator', 'licenciamento').eq('ref_month', refMonth).maybeSingle();
     if (!licRow) { mesesAlerta++; continue; }
-    const licenciamentoTotal = licRow.value * 1000;
+    const licenciamentoTotal = Math.round(licRow.value * 1000);
     let outras = licenciamentoTotal - somaTop40;
     if (outras < 0) {
       // Divergência metodológica Fenabrave × Anfavea: até 0,5%, publica com "Outras" = 0

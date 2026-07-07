@@ -36,7 +36,9 @@ async function mesesComDados(tabela, filtro = {}) {
 }
 
 async function fetchAutooAno(ano) {
-  const res = await fetch(`https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${ano}/`);
+  const res = await fetch(`https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${ano}/`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' },
+  });
   if (!res.ok) return null;
   const buf = await res.arrayBuffer();
   const html = new TextDecoder('iso-8859-1').decode(buf);

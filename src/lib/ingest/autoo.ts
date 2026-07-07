@@ -9,7 +9,14 @@ export const TOLERANCIA_DIVERGENCIA = 0.005; // 0,5%
 
 async function fetchRankingAno(year: number) {
   const url = `https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${year}/`;
-  const res = await fetch(url);
+  // O Autoo devolve 403 para requisições sem cara de navegador (ex.: servidores da Vercel).
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'pt-BR,pt;q=0.9',
+    },
+  });
   if (!res.ok) throw new Error(`Autoo: falha ao baixar o ranking de ${year} (HTTP ${res.status}).`);
   // A página é servida em ISO-8859-1, não UTF-8.
   const buf = await res.arrayBuffer();
@@ -67,7 +74,7 @@ export async function ingestAutooYear(supabase: SupabaseClient, year: number) {
       continue;
     }
 
-    const licenciamentoTotal = licRow.value * 1000; // volta de "mil un." para unidades
+    const licenciamentoTotal = Math.round(licRow.value * 1000); // volta de "mil un." para unidades
     let outras = licenciamentoTotal - somaTop40;
 
     if (outras < 0) {

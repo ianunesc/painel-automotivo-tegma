@@ -18,7 +18,9 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.
 const TOLERANCIA = 0.005;
 
 async function backfillAno(ano) {
-  const res = await fetch(`https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${ano}/`);
+  const res = await fetch(`https://www.autoo.com.br/emplacamentos/marcas-mais-vendidas/${ano}/`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' },
+  });
   if (!res.ok) { console.warn(`⚠ Autoo ${ano}: HTTP ${res.status}`); return; }
   const html = new TextDecoder('iso-8859-1').decode(await res.arrayBuffer());
   const $ = cheerio.load(html);
@@ -46,7 +48,7 @@ async function backfillAno(ano) {
     const { data: licRow } = await supabase.from('monthly_values').select('value').eq('indicator', 'licenciamento').eq('ref_month', refMonth).maybeSingle();
     if (!licRow) continue;
 
-    const licenciamentoTotal = licRow.value * 1000;
+    const licenciamentoTotal = Math.round(licRow.value * 1000);
     let outras = licenciamentoTotal - somaTop40;
     let nota = '';
     if (outras < 0) {
