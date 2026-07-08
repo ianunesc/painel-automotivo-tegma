@@ -106,10 +106,10 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {INDICATOR_ORDER.map((ind) => {
+        {INDICATOR_ORDER.flatMap((ind) => {
           const meta = INDICATOR_META[ind];
           const { atual, delta: d, mes } = cardData(ind);
-          return (
+          const cartao = (
             <IndicatorCard
               key={ind}
               label={meta.label}
@@ -121,15 +121,21 @@ export default async function DashboardPage() {
               inverse={meta.inverse}
             />
           );
+          // Licenciamento por dia útil entra logo ao lado do licenciamento
+          if (ind !== 'licenciamento') return [cartao];
+          return [
+            cartao,
+            <IndicatorCard
+              key="licenciamento_dia_util"
+              label="Licenciamento por dia útil"
+              value={licPorDiaAtual}
+              unit="mil un./dia"
+              decimals={2}
+              deltaPct={licPorDiaDelta}
+              mesReferencia={mesLabel(licCard.mes)}
+            />,
+          ];
         })}
-        <IndicatorCard
-          label="Licenciamento por dia útil"
-          value={licPorDiaAtual}
-          unit="mil un./dia"
-          decimals={2}
-          deltaPct={licPorDiaDelta}
-          mesReferencia={mesLabel(licCard.mes)}
-        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
