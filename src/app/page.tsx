@@ -58,6 +58,7 @@ export default async function DashboardPage() {
     licenciamento: byIndicator.get('licenciamento')?.get(m) ?? null,
     producao: byIndicator.get('producao')?.get(m) ?? null,
     exportacao: byIndicator.get('exportacao')?.get(m) ?? null,
+    importados: byIndicator.get('importados')?.get(m) ?? null,
   }));
 
   const creditData = meses12.map((m) => ({

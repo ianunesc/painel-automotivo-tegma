@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 const NAV = [
   { href: '/', label: 'Dashboard' },
@@ -12,13 +13,27 @@ export default function Header() {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <Link href="/" className="text-lg font-semibold text-tegma-dark">
               Painel do Mercado Automotivo <span className="text-tegma-orange">— Tegma RI</span>
             </Link>
             <p className="text-xs text-text-muted">Uma iniciativa do RI da Tegma (B3: TGMA3)</p>
           </div>
+          <Image src="/tegma-logo.png" alt="Tegma" width={110} height={51} priority className="h-auto w-[110px]" />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <nav className="flex flex-wrap gap-1">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-lg px-3 py-1.5 text-sm text-text-secondary transition hover:bg-surface-muted hover:text-tegma-dark"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
           <div className="flex items-center gap-3">
             <a
               href="https://ri.tegma.com.br"
@@ -34,17 +49,6 @@ export default function Header() {
             </Link>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-1">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-lg px-3 py-1.5 text-sm text-text-secondary transition hover:bg-surface-muted hover:text-tegma-dark"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </div>
     </header>
   );

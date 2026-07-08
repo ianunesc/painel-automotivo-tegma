@@ -2,7 +2,13 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export type TrendPoint = { mes: string; licenciamento: number | null; producao: number | null; exportacao: number | null };
+export type TrendPoint = {
+  mes: string;
+  licenciamento: number | null;
+  producao: number | null;
+  exportacao: number | null;
+  importados: number | null;
+};
 
 export default function MarketTrendChart({ data }: { data: TrendPoint[] }) {
   return (
@@ -16,6 +22,7 @@ export default function MarketTrendChart({ data }: { data: TrendPoint[] }) {
         <Line type="monotone" dataKey="licenciamento" name="Licenciamento" stroke="var(--tegma-orange)" strokeWidth={2} dot={false} />
         <Line type="monotone" dataKey="producao" name="Produção" stroke="var(--tegma-blue)" strokeWidth={2} dot={false} />
         <Line type="monotone" dataKey="exportacao" name="Exportação" stroke="#8a9498" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="importados" name="Importados" stroke="var(--tegma-orange-light)" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
